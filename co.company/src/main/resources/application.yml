@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: companies
+  datasource:
+    hikari:
+      connection-timeout: ${spring.datasource.hikari.connection-timeout}
+      maximum-pool-size: ${spring.datasource.hikari.maximum-pool-size}
+    password: ${spring.datasource.password}
+    url: ${spring.datasource.url}
+    username: ${spring.datasource.username}
+  profile:
+    default: default
+  config:
+    import: "optional:configserver:http://localhost:7777"
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+    operations-sorter: method
+    tags-sorter: alpha
+  api-docs:
+    path: /api-docs
+logging:
+  level:
+    org:
+      hibernate:
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+        SQL: DEBUG
+server:
+  port: 0
+  servlet:
+    context-path: /companies
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: "${spring.application.name}:${random.value}"
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+

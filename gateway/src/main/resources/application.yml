@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: gateway
+  profiles:
+    default: eureka-on
+  cloud:
+    gateway:
+      routes:
+        - id: company_route
+          uri: http://localhost:8081
+          predicates:
+            - Path=/companies/api/company/**
+        - id: report_route
+          uri: http://localhost:7070
+          predicates:
+            - Path=/report-ms/api/report/**
+server:
+  port: 4040
+
+eureka:
+  client:
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

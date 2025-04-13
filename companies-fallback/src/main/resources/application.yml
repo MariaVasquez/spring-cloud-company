@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: companies-fallback
+server:
+  port: 8787
+  servlet:
+    context-path: /report-ms
+eureka:¬
+  instance:
+    instance-id: "${spring.application.name}:${random.value}"
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
