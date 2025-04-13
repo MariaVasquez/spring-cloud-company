@@ -13,7 +13,7 @@ springdoc:
   api-docs:
     path: /api-docs
 server:
-  port: 0
+  port: 7070
   servlet:
     context-path: /report-ms
 eureka:

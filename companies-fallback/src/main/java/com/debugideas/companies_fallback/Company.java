@@ -1,5 +1,6 @@
 package com.debugideas.companies_fallback;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class Company {
     private String name;
     private String founder;
     private String logo;
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate foundationDate;
     private List<Website> websites;
 }
