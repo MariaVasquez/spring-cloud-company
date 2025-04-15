@@ -6,7 +6,15 @@ spring:
     active: default
   application:
     name: config-server
-
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${GIT_REPO_URI}
+          username: ${GIT_USERNAME}
+          password: ${GIT_PASSWORD}
+          default-label: ${GIT_DEFAULT_LABEL:main}
+          clone-on-start: true
 eureka:
   instance:
     instance-id: "${spring.application.name}:${random.value}"
