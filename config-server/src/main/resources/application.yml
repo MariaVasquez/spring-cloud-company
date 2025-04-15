@@ -1,10 +1,12 @@
 server:
   port: 7777
+
 spring:
   profiles:
     active: default
   application:
     name: config-server
+
 eureka:
   instance:
     instance-id: "${spring.application.name}:${random.value}"

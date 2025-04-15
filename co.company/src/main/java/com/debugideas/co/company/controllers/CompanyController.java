@@ -20,11 +20,11 @@ public class CompanyController {
     @GetMapping("/{name}")
     @Operation(summary = "Get by name company")
     public ResponseEntity<Company> getByName(@PathVariable String name){
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
+        /*try{
+            Thread.sleep(7000);
+        }catch (Exception e){
             throw new RuntimeException(e);
-        }
+        }*/
         return ResponseEntity.ok(companyService.getByName(name));
     }
 

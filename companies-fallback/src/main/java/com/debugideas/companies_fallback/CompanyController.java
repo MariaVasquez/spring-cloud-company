@@ -19,7 +19,7 @@ public class CompanyController {
             .builder()
             .id(0L)
             .founder("Fallback")
-            .name("Fallback company")
+            .name("FallbackCompany")
             .logo("http://default-logo.com")
             .foundationDate(LocalDate.now())
             .websites(Collections.emptyList())

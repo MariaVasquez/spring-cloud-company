@@ -29,7 +29,7 @@ logging:
               BasicBinder: TRACE
         SQL: DEBUG
 server:
-  port: 8081
+  port: 0
   servlet:
     context-path: /companies
 eureka:
