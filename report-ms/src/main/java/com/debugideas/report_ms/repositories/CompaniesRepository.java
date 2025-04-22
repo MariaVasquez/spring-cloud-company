@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-@FeignClient(name = "companies")
+@FeignClient(name = "COMPANIES")
 public interface CompaniesRepository {
 
     @GetMapping("/companies/api/company/{name}")

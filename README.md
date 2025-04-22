@@ -58,6 +58,7 @@ Bienvenido al proyecto de arquitectura de microservicios usando **Spring Boot** 
 ### 🔧 Config Server
 - Centraliza y versiona los archivos `application.yml`
 - Integrado con GitHub 💾
+- Se utiliza un repo con las configuraciones centralizadas: [Visita el repositorio](https://github.com/MariaVasquez/microservice-config)
 
 ---
 

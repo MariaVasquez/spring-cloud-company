@@ -1,5 +1,6 @@
 package com.debugideas.report_ms.services;
 
+import com.debugideas.report_ms.config.ReportPublisher;
 import com.debugideas.report_ms.helpers.ReportHerlper;
 import com.debugideas.report_ms.models.Company;
 import com.debugideas.report_ms.models.Website;
@@ -26,6 +27,7 @@ public class ReportServiceImpl implements ReportService{
     private final ReportHerlper reportHerlper;
     private final CompaniesFallbackRepository companiesFallbackRepository;
     private final Resilience4JCircuitBreakerFactory resilience4JCircuitBreakerFactory;
+    private final ReportPublisher reportPublisher;
 
     @Override
     public String makeReport(String name) {
@@ -51,6 +53,7 @@ public class ReportServiceImpl implements ReportService{
                 .websites(website)
                 .build();
 
+        reportPublisher.publishReport(report);
         companiesRepository.postByName(company);
         return "Ok";
     }

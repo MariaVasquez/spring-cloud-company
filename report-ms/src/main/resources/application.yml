@@ -5,6 +5,15 @@ spring:
     default: default
   config:
     import: "optional:configserver:http://localhost:7777"
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: localhost:9092
+      function:
+        bindings:
+          consumerReport-out-O:
+            destination: consumerReport
 springdoc:
   swagger-ui:
     path: /swagger-ui

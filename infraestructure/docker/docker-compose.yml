@@ -40,7 +40,6 @@ services:
         KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       ports:
         - "9092:9092"
-        
     mongo-db:
       image: mongo:7.0.5-rc0
       restart: always
@@ -51,4 +50,4 @@ services:
         MONGO_INITDB_ROOT_PASSWORD: sa
         MONGO_INITDB_DATABASE: reports
       ports:
-        - "27017:27017"
+        - "28017:27017"
