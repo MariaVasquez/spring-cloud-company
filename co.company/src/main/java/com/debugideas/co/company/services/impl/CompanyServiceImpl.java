@@ -4,6 +4,8 @@ import com.debugideas.co.company.entities.Category;
 import com.debugideas.co.company.entities.Company;
 import com.debugideas.co.company.repositories.CompanyRepository;
 import com.debugideas.co.company.services.CompanyService;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import java.util.Objects;
 public class CompanyServiceImpl implements CompanyService {
 
     private final CompanyRepository companyRepository;
+    private final Tracer tracer;
 
     @Override
     public Company create(Company company) {
@@ -32,6 +35,12 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public Company getByName(String name) {
+        Span spanName = tracer.nextSpan().name("getByName");
+        try (Tracer.SpanInScope spanInScope = tracer.withSpan(spanName.start())){
+            log.info("Getting company from DB");
+        } finally {
+            spanName.end();
+        }
         return companyRepository
                 .findByName(name)
                 .orElseThrow(()-> new NoSuchElementException("Company not found"));

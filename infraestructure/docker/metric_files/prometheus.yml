@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 15s  # Cada cuánto Prometheus hace scraping
+
+scrape_configs:
+  - job_name: 'spring-boot-app'
+    metrics_path: '/actuator/prometheus'  # Ruta de métricas de Spring Boot
+    static_configs:
+      - targets: ['host.docker.internal:8080']  # O el nombre del contenedor si todo está en Docker
