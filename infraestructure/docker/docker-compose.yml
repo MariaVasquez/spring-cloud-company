@@ -156,8 +156,8 @@ services:
         SPRING_PROFILES_ACTIVE: default
         EUREKA_URL: http://ms-registry-server:8761/eureka/
         GIT_REPO_URI: https://github.com/MariaVasquez/microservice-config.git
-        GIT_USERNAME: mm.vasquez
-        GIT_PASSWORD: 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
+        GIT_USERNAME: 
+        GIT_PASSWORD: 
         GIT_DEFAULT_LABEL: main
       healthcheck:
         test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:7777/actuator/health"]
