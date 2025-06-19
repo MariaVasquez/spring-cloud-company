@@ -1,8 +1,8 @@
+name: spring-cloud-companies
 services:
-    db:
+    postgres-db:
       image: postgres:17.4
       container_name: db-companies
-      restart: always
       volumes:
         - ./sql/create_schema.sql:/docker-entrypoint-initdb.d/create_schema.sql
         - ./sql/data.sql:/docker-entrypoint-initdb.d/data.sql
@@ -12,11 +12,32 @@ services:
         POSTGRES_PASSWORD: 'udemy'
       ports:
         - '5432:5432'
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U debuggeandoideas -d companies"]
+        interval: 10s
+        timeout: 5s
+        retries: 10
+
+    mongo-db:
+      image: mongo:7.0.5-rc0
+      container_name: mongo-db
+      hostname: mongodb
+      environment:
+        MONGO_INITDB_ROOT_USERNAME: sa
+        MONGO_INITDB_ROOT_PASSWORD: sa
+        MONGO_INITDB_DATABASE: reports
+      ports:
+        - "28017:27017"
+      healthcheck:
+        test: echo 'db.runCommand("ping").ok' | mongosh mongo-db:27017/test --quiet
+        interval: 10s
+        timeout: 5s
+        retries: 5
+        start_period: 40s
 
     zookeeper:
       image: confluentinc/cp-zookeeper:7.4.3
       container_name: load-balancer
-      restart: always
       environment:
         ZOOKEEPER_CLIENT_PORT: 2181
         ZOOKEEPER_TICK_TIME: 2000
@@ -26,55 +47,49 @@ services:
     kafka:
       image: confluentinc/cp-kafka:7.4.3
       container_name: msg-broker
-      restart: always
       depends_on:
         - zookeeper
       environment:
         KAFKA_BROKER_ID: 1
-        KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
         KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://msg-broker:9092,PLAINTEXT_INTERNAL://msg-broker:29092
+        KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
         KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
         KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
         KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       ports:
         - "9092:9092"
-    mongo-db:
-      image: mongo:7.0.5-rc0
-      restart: always
-      container_name: mongo-db
-      hostname: mongodb
-      environment:
-        MONGO_INITDB_ROOT_USERNAME: sa
-        MONGO_INITDB_ROOT_PASSWORD: sa
-        MONGO_INITDB_DATABASE: reports
-      ports:
-        - "28017:27017"
+      healthcheck:
+        test: ["CMD", "nc", "-z", "localhost", "9092"]
+        interval: 10s
+        timeout: 10s
+        retries: 10
+        start_period: 20s
 
     otel-collector:
-      image: otel/opentelemetry-collector-contrib:0.82.0
-      restart: always
+      build:
+        context: .
+        dockerfile: Dockerfile.otel
       container_name: otel-collector
-      command:
-        - --config=/etc/otelcol-contrib/otel-collector.yml
-      volumes:
-        - ./metric_files/otel-collector.yml:/etc/otelcol-contrib/otel-collector.yml
       ports:
-        - "1888:1888"
-        - "8888:8888"
-        - "8889:8889"
         - "13133:13133"
         - "4317:4317"
         - "4318:4318"
+        - "8888:8888"
+        - "8889:8889"
+        - "1888:1888"
         - "55679:55679"
-      depends_on:
-        - jaeger-all-in-one
-        - zipkin-all-in-one
+      healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:13133/health"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+        start_period: 20s
 
     prometheus:
       container_name: prometheus
       image: prom/prometheus
-      restart: always
       command:
         - --config.file=/etc/prometheus/prometheus.yml
       volumes:
@@ -107,7 +122,6 @@ services:
 
     jaeger-all-in-one:
       image: jaegertracing/all-in-one:latest
-      restart: always
       ports:
         - "16686:16686"
         - "14268"
@@ -115,6 +129,139 @@ services:
 
     zipkin-all-in-one:
       image: openzipkin/zipkin:latest
-      restart: always
       ports:
         - "9411:9411"
+
+    ms-registry-server:
+      image: ms-registry-server:latest
+      container_name: ms-registry-server
+      ports:
+        - "8761:8761"
+      healthcheck:
+        test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8761/actuator/health"]
+        interval: 10s
+        timeout: 5s
+        retries: 10
+        start_period: 30s
+
+    ms-config-server:
+      image: ms-config-server:latest
+      container_name: ms-config-server
+      ports:
+        -  "7777:7777"
+      depends_on:
+        ms-registry-server:
+          condition: service_healthy
+      environment:
+        SPRING_PROFILES_ACTIVE: default
+        EUREKA_URL: http://ms-registry-server:8761/eureka/
+        GIT_REPO_URI: https://github.com/MariaVasquez/microservice-config.git
+        GIT_USERNAME: mm.vasquez
+        GIT_PASSWORD: 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
+        GIT_DEFAULT_LABEL: main
+      healthcheck:
+        test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:7777/actuator/health"]
+        interval: 10s
+        timeout: 5s
+        retries: 10
+        start_period: 40s
+
+    ms-companies-fallback:
+        image: ms-companies-fallback:latest
+        container_name: ms-companies-fallback
+        ports:
+          -  "8787:8787"
+        depends_on:
+          ms-config-server:
+            condition: service_healthy
+        environment:
+          EUREKA_URL: http://ms-registry-server:8761/eureka
+          CONFIG_SERVER_HOST: http://ms-config-server:7777
+
+    ms-auth:
+      image: ms-auth:latest
+      container_name: ms-auth
+      ports:
+        -  "3030:3030"
+      depends_on:
+        ms-config-server:
+          condition: service_healthy
+      environment:
+        EUREKA_URL: http://ms-registry-server:8761/eureka
+        CONFIG_SERVER_HOST: http://ms-config-server:7777
+
+    ms-gateway:
+      image: ms-gateway:latest
+      container_name: ms-gateway
+      ports:
+        -  "4040:4040"
+      depends_on:
+        ms-registry-server:
+          condition: service_healthy
+      environment:
+        EUREKA_URL: http://ms-registry-server:8761/eureka
+
+    ms-co-company:
+        image: ms-co-company:latest
+        container_name: ms-co-company
+        ports:
+          -  "8081:8081"
+        depends_on:
+          ms-config-server:
+            condition: service_healthy
+          postgres-db:
+            condition: service_healthy
+          otel-collector:
+            condition: service_healthy
+        environment:
+          CONFIG_SERVER_HOST: http://ms-config-server:7777
+          EUREKA_URL: http://ms-registry-server:8761/eureka
+          OTLP_METRICS_URL: http://otel-collector:4318/v1/metrics
+          OTLP_TRACING_URL: http://otel-collector:4318/v1/traces
+        healthcheck:
+          test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8081/actuator/health"]
+          interval: 10s
+          timeout: 5s
+          retries: 10
+          start_period: 40s
+
+    ms-report:
+          image: ms-report-ms:latest
+          container_name: ms-report-ms
+          ports:
+            -  "7070:7070"
+          depends_on:
+            ms-config-server:
+              condition: service_healthy
+            kafka:
+              condition: service_healthy
+          environment:
+            EUREKA_URL: http://ms-registry-server:8761/eureka
+            CONFIG_SERVER_HOST: http://ms-config-server:7777
+            BROKER_URL: msg-broker:9092
+          healthcheck:
+              test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:7070/actuator/health"]
+              interval: 10s
+              timeout: 5s
+              retries: 10
+              start_period: 40s
+
+    ms-report-listener:
+        image: ms-report-listener:latest
+        container_name: ms-report-listener
+        ports:
+          -  "1010:1010"
+        depends_on:
+          ms-co-company:
+            condition: service_healthy
+          ms-report:
+            condition: service_healthy
+          kafka:
+            condition: service_healthy
+          mongo-db:
+            condition: service_healthy
+        environment:
+          MONGO_URI: mongodb://sa:sa@mongo-db:27017/reports?authSource=admin
+          BROKER_URL: msg-broker:9092
+          EUREKA_URL: http://ms-registry-server:8761/eureka
+

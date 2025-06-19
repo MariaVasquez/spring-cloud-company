@@ -1,11 +1,22 @@
 spring:
   application:
     name: companies-fallback
+
 server:
-  port: 0
+  port: 8787
   servlet:
     context-path: /companies-fallback
+
 eureka:
   instance:
     prefer-ip-address: true
-    hostname: localhost
+    instance-id: "${spring.application.name}:${random.value}"
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

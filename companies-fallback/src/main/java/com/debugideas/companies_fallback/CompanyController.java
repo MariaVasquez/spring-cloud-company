@@ -1,11 +1,9 @@
 package com.debugideas.companies_fallback;
 
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -28,6 +26,12 @@ public class CompanyController {
     @GetMapping("/{name}")
     public ResponseEntity<Company> getByName(@PathVariable String name){
         return ResponseEntity.ok(DEFAULT_COMPANY);
+    }
+
+    @PostMapping
+    public ResponseEntity<String> postFallback() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("POST fallback: Company service unavailable.");
     }
 
 }

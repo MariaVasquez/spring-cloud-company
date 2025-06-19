@@ -3,21 +3,23 @@ spring:
     name: report-listener
   profile:
     default: default
+
   cloud:
     stream:
+      kafka:
+        binder:
+          brokers: ${BROKER_URL:localhost:9092}
       bindings:
         consumerReport-in-0:
           destination: consumerReport
           group: report-group
       function:
         definition: consumerReport
+
   data:
     mongodb:
-      authentication-database: ${MONGO_DATABASE}
-      host: ${MONGO_HOST}
-      port: ${MONGO_PORT}
-      username: ${MONGO_USERNAME}
-      password: ${MONGO_PASSWORD}
+      uri: mongodb://sa:sa@localhost:28017/reports?authSource=admin
+      auto-index-creation: true
 
 springdoc:
   swagger-ui:
@@ -26,17 +28,24 @@ springdoc:
     tags-sorter: alpha
   api-docs:
     path: /api-docs
+
 server:
-  port: 0
+  port: 1010
 eureka:
   instance:
     instance-id: "${spring.application.name}:${random.value}"
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL}
 
 logging:
   level:
     feign: DEBUG
     org.springframework.cloud.openfeign: DEBUG
 
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -39,10 +39,11 @@ public class CompanyController {
     @Operation(summary = "Create a company")
     @Observed(name = "company.save")
     @Timed(value = "company.save")
-    public ResponseEntity<Company> create(@RequestBody Company company){
+    public ResponseEntity<Company> create(@RequestBody Company companyRequest){
+        Company company = companyService.create(companyRequest);
         return ResponseEntity
-                .created(URI.create(companyService.create(company).getName()))
-                .build();
+                .created(URI.create(company.getName()))
+                .body(company);
     }
 
     @PutMapping("/{name}")

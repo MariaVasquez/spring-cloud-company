@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuitBreakerFactory;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -39,23 +40,29 @@ public class ReportServiceImpl implements ReportService{
     }
 
     @Override
+    @Transactional
     public String saveReport(String report) {
-        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        List<String> template = reportHerlper.getFromTemplate(report);
-        List<Website> website = Stream.of(template.get(3))
-                .map(web-> Website.builder().name(web).build())
-                .toList();
+        try{
+            DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            List<String> template = reportHerlper.getFromTemplate(report);
+            List<Website> website = Stream.of(template.get(3))
+                    .map(web-> Website.builder().name(web).build())
+                    .toList();
 
-        Company company = Company.builder()
-                .name(template.get(0))
-                .foundationDate(LocalDate.parse(template.get(1), dateFormat))
-                .founder(template.get(2))
-                .websites(website)
-                .build();
+            Company company = Company.builder()
+                    .name(template.get(0))
+                    .foundationDate(LocalDate.parse(template.get(1), dateFormat))
+                    .founder(template.get(2))
+                    .websites(website)
+                    .build();
 
-        reportPublisher.publishReport(report);
-        companiesRepository.postByName(company);
-        return "Ok";
+            reportPublisher.publishReport(report);
+            companiesRepository.postByName(company);
+            return "Ok";
+        }catch (Exception e){
+            throw new RuntimeException(e.fillInStackTrace());
+        }
+
     }
 
     @Override

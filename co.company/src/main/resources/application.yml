@@ -8,10 +8,10 @@ spring:
     password: ${spring.datasource.password}
     url: ${spring.datasource.url}
     username: ${spring.datasource.username}
-  profile:
-    default: default
+  profiles:
+    active: prod
   config:
-    import: "optional:configserver:http://localhost:7777"
+    import: "optional:configserver:${CONFIG_SERVER_HOST}"
 springdoc:
   swagger-ui:
     path: /swagger-ui
@@ -31,7 +31,7 @@ logging:
               BasicBinder: TRACE
         SQL: DEBUG
 server:
-  port: 0
+  port: 8081
   servlet:
     context-path: /companies
 eureka:
@@ -40,7 +40,7 @@ eureka:
     instance-id: "${spring.application.name}:${random.value}"
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL}
 management:
   tracing:
     enabled: true
@@ -49,10 +49,10 @@ management:
   otlp:
     metrics:
       export:
-        url: http://localhost:4318/v1/metrics
+        url: ${OTLP_METRICS_URL}
         step: 10s
     tracing:
-      endpoint: http://localhost:4318/v1/traces
+      endpoint: ${OTLP_TRACING_URL}
   metrics:
     distribution:
       percentiles:
@@ -74,4 +74,5 @@ management:
     web:
       exposure:
         include: '*'
+
 

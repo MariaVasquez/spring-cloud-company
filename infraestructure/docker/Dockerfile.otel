@@ -1,0 +1,10 @@
+FROM alpine:3.19
+RUN apk add --no-cache curl
+
+ADD https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v0.82.0/otelcol-contrib_0.82.0_linux_amd64.tar.gz /otel.tgz
+RUN mkdir /otel && tar -xzf /otel.tgz -C /otel
+
+WORKDIR /otel
+COPY ./metric_files/otel-collector.yml /otel/config.yml
+
+CMD ["./otelcol-contrib", "--config=/otel/config.yml"]

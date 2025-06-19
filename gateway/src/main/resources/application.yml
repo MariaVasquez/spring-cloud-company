@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: eureka-on-cb
+    active: oauth2
 
   application:
     name: gateway
@@ -15,9 +15,15 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_URL}
     fetch-registry: true
     register-with-eureka: true
 
 server:
   port: 4040
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
